@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Tree</title>
+
+    <style>
+
+ .node circle {
+   fill: #fff;
+   stroke: #047B9C;
+   stroke-width: 4px;
+ }
+
+ text {
+  font: 12px sans-serif;
+ }
+
+ .node text { font: 12px sans-serif; }
+
+ .link {
+   fill: none;
+   stroke: #848484;
+   stroke-width: 1.5px;
+ }
+ .circle_clique {
+  width:75px;
+  height:75px;
+  border-radius:50px;
+  font-size:20px;
+  font-family: sans-serif;
+  color:#000;
+  line-height:75px;
+  text-align:center;
+  background:#DF0101
+ }
+ .circle_chain {
+  width:75px;
+  height:75px;
+  border-radius:50px;
+  font-size:20px;
+  font-family: sans-serif;
+  color:#000;
+  line-height:75px;
+  text-align:center;
+  background:#04B404;
+ }
+ .circle_none {
+  width:75px;
+  height:75px;
+  border-radius:50px;
+  font-size:20px;
+  font-family: sans-serif;
+  color:#000;
+  line-height:75px;
+  text-align:center;
+  background:#047B9C;
+ }
+ .invisible {
+  width:75px;
+  height:75px;
+  border-radius:50px;
+  font-size:20px;
+  font-family: sans-serif;
+  color:#fff;
+  line-height:75px;
+  text-align:center;
+  background:#fff;
+ }
+ 
+    </style>
+
+  </head>
+
+  <body>
+
+<!-- load d3.js --> 
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="jquery-1.11.3.min.js"></script>
+<script>
+
+/*
+var treeData = []
+$.ajax({
+  type: "POST",
+  url: "/Users/jackgartland/Dropbox/ScazLab 2015/parse_tabs.py",
+}).done(function(json_array) {
+  console.log("the array is:");
+  console.log(json_array);
+  treeData = json_array.json_array;
+  console.log(treeData);
+}); */
+
+var treeData = 
+[{"values": {"support_actions": [], "order_invariant": "chain", "name": "Assemble Chair", "actions": []}, "children": [{"values": {"support_actions": [], "order_invariant": "clique", "name": "Attach Supports", "actions": []}, "children": [{"values": {"support_actions": [], "order_invariant": "chain", "name": "Attach Left Support", "actions": []}, "children": [{"values": {"support_actions": [], "order_invariant": "primitive", "name": "Get Peg", "actions": []}, "children": []}, {"values": {"support_actions": [], "order_invariant": "primitive", "name": "Place Peg", "actions": []}, "children": []}]}, {"values": {"support_actions": [], "order_invariant": "chain", "name": "Attach Right Support", "actions": []}, "children": [{"values": {"support_actions": [], "order_invariant": "primitive", "name": "Get Peg", "actions": []}, "children": []}, {"values": {"support_actions": [], "order_invariant": "primitive", "name": "Place Peg", "actions": []}, "children": []}]}]}, {"values": {"support_actions": [], "order_invariant": "chain", "name": "Place Seat", "actions": []}, "children": []}, {"values": {"support_actions": [], "order_invariant": "clique", "name": "Place Front Frame", "actions": []}, "children": [{"values": {"support_actions": [], "order_invariant": "chain", "name": "Secure Left Side", "actions": []}, "children": []}, {"values": {"support_actions": [], "order_invariant": "chain", "name": "Secure Right Side", "actions": []}, "children": []}]}]}];
+
+
+// Generate tree
+var margin = {top: 20, right: 120, bottom: 20, left: 120},
+ width = 5000 - margin.right - margin.left,
+ height = 500 - margin.top - margin.bottom;
+ 
+var i = 0;
+
+var tree = d3.layout.tree()
+ .size([height, width]);
+
+var diagonal = d3.svg.diagonal()
+ .projection(function(d) { return [d.y, d.x]; });
+
+var svg = d3.select("body").append("svg")
+ .attr("width", width + margin.right + margin.left)
+ .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+ .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+root = treeData[0];
+  
+update(root);
+
+function update(source) {
+
+  // Compute the new tree layout.
+  var nodes = tree.nodes(root).reverse(),
+   links = tree.links(nodes);
+
+  // Normalize for fixed-depth.
+  nodes.forEach(function(d) { d.y = d.depth * 180; });
+
+  // Declare the nodes
+  var node = svg.selectAll("g.node")
+   .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+  var nodeEnter = node.enter().append("g")
+   .attr("class", "node")
+   .attr("transform", function(d) { 
+    return "translate(" + d.y + "," + d.x + ")"; });
+
+  nodeEnter.append("circle")
+   .attr("r", 7)
+   .style("stroke", function(d) {
+    if (d.values.order_invariant == "chain") {
+      return "04B404"; } 
+    else if (d.values.order_invariant == "clique") {
+      return "DF0101"; }
+    else {
+      return "047B9C"; }
+    });
+
+  nodeEnter.append("text")
+   .attr("x", function(d) { 
+    return d.children || d._children ? -13 : 13; })
+   .attr("dy", ".35em")
+   .attr("text-anchor", function(d) { 
+    return d.children || d._children ? "end" : "start"; })
+   .text(function(d) { return d.values.name; })
+   .style("fill-opacity", 1);
+
+  // Make the links
+  var link = svg.selectAll("path.link")
+   .data(links, function(d) { return d.target.id; });
+
+  link.enter().insert("path", "g")
+   .attr("class", "link")
+   .attr("d", diagonal);
+
+}
+
+</script>
+<div text-align:center>
+ <div class="circle_clique">Clique</div>
+ <div class="circle_chain">Chain</div>
+ <div class="circle_none">Primitive</div>
+</div>
+  </body>
+</html>
