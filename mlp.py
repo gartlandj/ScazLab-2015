@@ -23,8 +23,8 @@ __docformat__ = 'restructedtext en'
 
 import os
 import sys
-import time
-import pickle
+import timeit
+
 import numpy
 
 import theano
@@ -33,55 +33,6 @@ import theano.tensor as T
 
 from logistic_sgd import LogisticRegression, load_data
 
-
-def load_auto_data():
-    print "...Loading Data"
-
-    f = file("flags.data", "rb")
-    opened_data_x = numpy.loadtxt(f, usecols=(1,2,3,4,5,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,23,24,25,26,27))
-    f.close()
-    f = file("flags.data", "rb")
-    opened_data_y = numpy.loadtxt(f, usecols=(1,6))
-    f.close()
-    
-    #Create the training set
-    train_set_x = opened_data_x[:120]
-    train_set_x = theano.shared(train_set_x)
-    train_set_y = opened_data_y[:120]
-    train_set_y_formatted = []
-    for row in train_set_y:
-        train_set_y_formatted = numpy.append(train_set_y_formatted, row[1])
-    train_set_y = train_set_y_formatted
-    train_set_y = theano.shared(train_set_y)
-    train_set_y = T.cast(train_set_y, 'int32')
-
-    #Create the validation set
-    valid_set_x = opened_data_x[121:160]
-    valid_set_x = theano.shared(valid_set_x)
-    valid_set_y = opened_data_y[121:160]
-    valid_set_y_formatted = []
-    for row in valid_set_y:
-        valid_set_y_formatted = numpy.append(valid_set_y_formatted, row[1])
-    valid_set_y = valid_set_y_formatted
-    valid_set_y = theano.shared(valid_set_y)
-    valid_set_y = T.cast(valid_set_y, 'int32')
-
-    #Creat the test set
-    test_set_x = opened_data_x[161:]
-    test_set_x = theano.shared(test_set_x)
-    test_set_y = opened_data_y[161:]
-    test_set_y_formatted = []
-    for row in test_set_y:
-        test_set_y_formatted = numpy.append(test_set_y_formatted, row[1])
-    test_set_y = test_set_y_formatted
-    test_set_y = theano.shared(test_set_y)
-    test_set_y = T.cast(test_set_y, 'int32')
-
-    print "train_set_x:"
-    print train_set_x.eval()
-    print "train_set_y:"
-    print train_set_y.eval()
-    return train_set_x, train_set_y, valid_set_x, valid_set_y, test_set_x, test_set_y
 
 # start-snippet-1
 class HiddenLayer(object):
@@ -241,8 +192,8 @@ class MLP(object):
         # end-snippet-3
 
 
-def test_mlp(learning_rate=0.001, L1_reg=0.00, L2_reg=0.0001, n_epochs=100000,
-             dataset='mnist.pkl.gz', batch_size=10, n_hidden=250):
+def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=1000,
+             dataset='mnist.pkl.gz', batch_size=20, n_hidden=500):
     """
     Demonstrate stochastic gradient descent optimization for a multilayer
     perceptron
@@ -270,16 +221,17 @@ def test_mlp(learning_rate=0.001, L1_reg=0.00, L2_reg=0.0001, n_epochs=100000,
 
 
    """
-    train_set_x, train_set_y, valid_set_x, valid_set_y, test_set_x, test_set_y = load_auto_data()
-    
-    
-    # compute number of minibatches for training, validation and testing
-    n_train_batches = train_set_x.shape[0].eval() / batch_size
-    n_valid_batches = valid_set_x.shape[0].eval() / batch_size
-    n_test_batches = test_set_x.shape[0].eval() / batch_size
+    datasets = load_data(dataset)
 
-    print "n_train_batches:"
-    print n_train_batches
+    train_set_x, train_set_y = datasets[0]
+    valid_set_x, valid_set_y = datasets[1]
+    test_set_x, test_set_y = datasets[2]
+
+    # compute number of minibatches for training, validation and testing
+    n_train_batches = train_set_x.get_value(borrow=True).shape[0] / batch_size
+    n_valid_batches = valid_set_x.get_value(borrow=True).shape[0] / batch_size
+    n_test_batches = test_set_x.get_value(borrow=True).shape[0] / batch_size
+
     ######################
     # BUILD ACTUAL MODEL #
     ######################
@@ -297,9 +249,9 @@ def test_mlp(learning_rate=0.001, L1_reg=0.00, L2_reg=0.0001, n_epochs=100000,
     classifier = MLP(
         rng=rng,
         input=x,
-        n_in=25,
+        n_in=28 * 28,
         n_hidden=n_hidden,
-        n_out=8
+        n_out=10
     )
 
     # start-snippet-4
@@ -315,7 +267,6 @@ def test_mlp(learning_rate=0.001, L1_reg=0.00, L2_reg=0.0001, n_epochs=100000,
 
     # compiling a Theano function that computes the mistakes that are made
     # by the model on a minibatch
-
     test_model = theano.function(
         inputs=[index],
         outputs=classifier.errors(y),
@@ -371,18 +322,11 @@ def test_mlp(learning_rate=0.001, L1_reg=0.00, L2_reg=0.0001, n_epochs=100000,
     print '... training'
 
     # early-stopping parameters
-    patience = 100000  # look as this many examples regardless
+    patience = 10000  # look as this many examples regardless
     patience_increase = 2  # wait this much longer when a new best is
                            # found
     improvement_threshold = 0.995  # a relative improvement of this much is
                                    # considered significant
-    '''if theano.tensor.{le}(patience/2, n_train_batches):
-        validation_frequency = n_train_batches
-    elif theano.tensor.{ge}(patience/2, n_train_batches):
-        validation_frequency = patience/2
-    else:
-        validation_frequency = patience/2'''
-    print n_train_batches
     validation_frequency = min(n_train_batches, patience / 2)
                                   # go through this many
                                   # minibatche before checking the network
@@ -392,7 +336,7 @@ def test_mlp(learning_rate=0.001, L1_reg=0.00, L2_reg=0.0001, n_epochs=100000,
     best_validation_loss = numpy.inf
     best_iter = 0
     test_score = 0.
-    start_time = time.clock()
+    start_time = timeit.default_timer()
 
     epoch = 0
     done_looping = False
@@ -422,33 +366,32 @@ def test_mlp(learning_rate=0.001, L1_reg=0.00, L2_reg=0.0001, n_epochs=100000,
                 )
 
                 # if we got the best validation score until now
-                #if this_validation_loss < best_validation_loss:
+                if this_validation_loss < best_validation_loss:
                     #improve patience if loss improvement is good enough
-                if (
-                    this_validation_loss < best_validation_loss *
-                    improvement_threshold
-                ):
-                    patience = max(patience, iter * patience_increase)
+                    if (
+                        this_validation_loss < best_validation_loss *
+                        improvement_threshold
+                    ):
+                        patience = max(patience, iter * patience_increase)
 
-                best_validation_loss = this_validation_loss
-                best_iter = iter
+                    best_validation_loss = this_validation_loss
+                    best_iter = iter
 
-                # test it on the test set
-                test_losses = [test_model(i) for i
-                               in xrange(n_test_batches)]
-                test_score = numpy.mean(test_losses)
+                    # test it on the test set
+                    test_losses = [test_model(i) for i
+                                   in xrange(n_test_batches)]
+                    test_score = numpy.mean(test_losses)
 
-                print(('     epoch %i, minibatch %i/%i, test error of '
-                       'best model %f %%') %
-                      (epoch, minibatch_index + 1, n_train_batches,
-                       test_score * 100.))
-
+                    print(('     epoch %i, minibatch %i/%i, test error of '
+                           'best model %f %%') %
+                          (epoch, minibatch_index + 1, n_train_batches,
+                           test_score * 100.))
 
             if patience <= iter:
                 done_looping = True
                 break
 
-    end_time = time.clock()
+    end_time = timeit.default_timer()
     print(('Optimization complete. Best validation score of %f %% '
            'obtained at iteration %i, with test performance %f %%') %
           (best_validation_loss * 100., best_iter + 1, test_score * 100.))

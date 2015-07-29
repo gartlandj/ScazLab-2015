@@ -241,7 +241,7 @@ class MLP(object):
         # end-snippet-3
 
 
-def test_mlp(learning_rate=0.0001, L1_reg=0.00, L2_reg=0.0001, n_epochs=5000,
+def test_mlp(learning_rate=0.0001, L1_reg=0.00, L2_reg=0.0001, n_epochs=50000,
              dataset='mnist.pkl.gz', batch_size=10, n_hidden=1000):
     """
     Demonstrate stochastic gradient descent optimization for a multilayer
@@ -371,7 +371,7 @@ def test_mlp(learning_rate=0.0001, L1_reg=0.00, L2_reg=0.0001, n_epochs=5000,
     print '... training'
 
     # early-stopping parameters
-    patience = 10000  # look as this many examples regardless
+    patience = 50000  # look as this many examples regardless
     patience_increase = 2  # wait this much longer when a new best is
                            # found
     improvement_threshold = 0.995  # a relative improvement of this much is
@@ -422,26 +422,26 @@ def test_mlp(learning_rate=0.0001, L1_reg=0.00, L2_reg=0.0001, n_epochs=5000,
                 )
 
                 # if we got the best validation score until now
-                if this_validation_loss < best_validation_loss:
+                #if this_validation_loss < best_validation_loss:
                     #improve patience if loss improvement is good enough
-                    if (
-                        this_validation_loss < best_validation_loss *
-                        improvement_threshold
-                    ):
-                        patience = max(patience, iter * patience_increase)
+                if (
+                    this_validation_loss < best_validation_loss *
+                    improvement_threshold
+                ):
+                    patience = max(patience, iter * patience_increase)
 
-                    best_validation_loss = this_validation_loss
-                    best_iter = iter
+                best_validation_loss = this_validation_loss
+                best_iter = iter
 
-                    # test it on the test set
-                    test_losses = [test_model(i) for i
-                                   in xrange(n_test_batches)]
-                    test_score = numpy.mean(test_losses)
+                # test it on the test set
+                test_losses = [test_model(i) for i
+                               in xrange(n_test_batches)]
+                test_score = numpy.mean(test_losses)
 
-                    print(('     epoch %i, minibatch %i/%i, test error of '
-                           'best model %f %%') %
-                          (epoch, minibatch_index + 1, n_train_batches,
-                           test_score * 100.))
+                print(('     epoch %i, minibatch %i/%i, test error of '
+                       'best model %f %%') %
+                      (epoch, minibatch_index + 1, n_train_batches,
+                       test_score * 100.))
 
 
             if patience <= iter:

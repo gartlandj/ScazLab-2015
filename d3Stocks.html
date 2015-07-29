@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+text {
+  font: 10px sans-serif;
+  fill: black;
+}
+</style>
+<svg width="2000" height="1100">
+  <circle cx="250" cy="265" r="10"></circle>
+  <circle cx="520" cy="400" r="10"></circle>
+  <circle cx="700" cy="265" r="10"></circle>
+  <circle cx="850" cy="400" r="10"></circle>
+  <circle cx="1000" cy="265" r="10"></circle>
+  <circle cx="1100" cy="400" r="10"></circle>
+  <circle cx="1200" cy="265" r="10"></circle>
+  <circle cx="1300" cy="400" r="10"></circle>
+  <circle cx="1400" cy="265" r="10"></circle>
+  <circle cx="1500" cy="400" r="10"></circle>
+
+</svg>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+var data = [{name: "Apple", cap: 741.8},
+			{name: "Google", cap: 367.6},
+			{name: "Exxon Mobile", cap: 357.1},
+			{name: "Bershire Hathaway", cap: 354.8},
+			{name: "Microsoft", cap: 340.8},
+			{name: "PetroChina", cap: 334.6},
+			{name: "ICBC", cap: 278.3},
+			{name: "Wells Fargo", cap: 278.3},
+			{name: "Johnson & Johnson", cap: 275.7},
+			{name: "Novartis", cap: 272.6}]
+
+
+var circle = d3.selectAll("circle")
+circle.style("fill", "steelblue")
+circle.data(data)
+circle.attr("r", function(d, i) { return data[i].cap * 0.3 });
+
+var circleArray = d3.selectAll("circle")
+//MY FIRST TWO TEXT ELEMENTS ARE CREATING ERRORS THAT PREVENT APPLE AND GOOGLE FROM BEING DISPLAYED
+var text = d3.select("svg").selectAll("text").data(data).enter().append("text");
+
+for (i = 0; i < 10; i++) {
+  var Current_name = data[i].name
+  text.filter(function(d) { return d.name == Current_name; }).attr("x", function(d,i) { return d3.selectAll("circle").filter(function(d) { return d.name == Current_name; }).attr("cx")-50; }).attr("y", function(d,i) { return d3.selectAll("circle").filter(function(d) { return d.name == Current_name; }).attr("cy"); });
+
+}
+text.text(function(d,i) { return data[i].name + " $" + data[i].cap + "B"});
+</script>
