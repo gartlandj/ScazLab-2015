@@ -1,0 +1,7 @@
+This repository contains most of the code I worked with during Summer 2015 at the Yale Social Robotics Lab.
+
+Most of the neural network code requires the datasets to be downloaded as well.  To run the Street View House Number identification net (theanonetwork_conv_for_SVHN.py), you must also download test_32x32.mat and train_32_32.mat from http://ufldl.stanford.edu/housenumbers/.  To run the fuel effeciency estimator (theanonetork_for_mpg.py), you must download auto.data from this repository.  To run theanonetork_for_flags.py, you will need flags_shuffled.data from this repository.  Most of the other files run on the MNIST dataset, which can be downloaded here: http://deeplearning.net/data/mnist/mnist.pkl.gz.  Finally, the Image Segmentation network (theanonetwork_conv_for_segmentation_small_imgs_jarvis.py) requires the Berkeley Image Segmentation Database, which can be downloaded here: http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/resources.html  Due to the way this code is currently running, you will need to rename the folder from BSR to BSR_Cropped and run img_region_selector.py where this directory is stored in order to resize the images and groundtruth files to make the network run faster. 
+
+Please note that the segmentation network is not currently completed.
+
+This repository also contains the file bvlc_googlenet.caffemodel, which has all of the network layers and parameters of GoogLeNet saved.  Installing Caffe and loading this model will allow you to run the GooLeNet, which recently won the ImageNet Challenge.
