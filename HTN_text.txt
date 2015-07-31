@@ -1,0 +1,12 @@
+-Assemble Chair
+    *Attach Supports
+        -Attach Left Support
+          Get Peg
+          Place Peg
+        -Attach Right Support
+          Get Peg
+          Place Peg
+    -Place Seat
+    *Place Front Frame
+        -Secure Left Side
+        -Secure Right Side
